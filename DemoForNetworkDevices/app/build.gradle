@@ -24,19 +24,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
 
-        debug {
-            debuggable true
-        }
-
-        /**
-         * It's my IOT build type for running as builtin app on Android Things.
-         * I use this type of build for testing on huge networks with my Raspberry Pi 3.
-         */
-        iot {
-            initWith debug
-            debuggable true
-            applicationIdSuffix ".iot"
-        }
     }
     buildFeatures{
         viewBinding true
