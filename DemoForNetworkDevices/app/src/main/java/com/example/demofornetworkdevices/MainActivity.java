@@ -1,6 +1,8 @@
 package com.example.demofornetworkdevices;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -40,7 +42,14 @@ public class MainActivity extends AppCompatActivity {
         RegTypeBrowserViewModel viewModel = new ViewModelProvider(this).get(RegTypeBrowserViewModel.class);
         ServiceBrowserViewModel serviceBrowserViewModel = new ViewModelProvider(this).get(ServiceBrowserViewModel.class);
         getDomainList(viewModel);
-        getDeviceDetails(serviceBrowserViewModel);
+
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                getDeviceDetails(serviceBrowserViewModel);
+            }
+        }, 3000);
+
 
         btnFetchDevices.setOnClickListener(view -> {
             deviceDetails.setText("");
