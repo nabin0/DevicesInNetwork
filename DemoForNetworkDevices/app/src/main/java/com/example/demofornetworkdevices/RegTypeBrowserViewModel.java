@@ -25,6 +25,7 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
 
     private final HashMap<String, Disposable> mBrowsers = new HashMap<>();
     private final HashMap<String, BonjourDomain> mServices = new HashMap<>();
+    private Disposable mResolveIPDisposable;
 
     protected Rx2Dnssd mRxDnssd;
     protected Disposable mDisposable;
@@ -39,6 +40,9 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
         super.onCleared();
         if (mDisposable != null) {
             mDisposable.dispose();
+        }
+        if (mResolveIPDisposable != null) {
+            mResolveIPDisposable.dispose();
         }
         mServices.clear();
         synchronized (this) {
@@ -110,6 +114,29 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
         return domain + regType + serviceName;
     }
 
+    public void startDiscovery(String reqType,
+                               String domain,
+                               Consumer<BonjourService> servicesAction,
+                               Consumer<Throwable> errorAction) {
+        mDisposable = mRxDnssd.browse(reqType, domain)
+                .compose(mRxDnssd.resolve())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(servicesAction, errorAction);
+    }
+
+    public void resolveIPRecords(BonjourService service, Consumer<BonjourService> consumer) {
+        mResolveIPDisposable = mRxDnssd.queryIPRecords(service)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(bonjourService -> {
+                    if (bonjourService.isLost()) {
+                        return;
+                    }
+                    consumer.accept(bonjourService);
+                }, throwable -> Log.e("DNSSD", "Error: ", throwable));
+    }
+
     public static class BonjourDomain extends BonjourService {
         public int serviceCount = 0;
 
@@ -117,5 +144,7 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
             super(new Builder(bonjourService));
         }
     }
+
+
 
 }

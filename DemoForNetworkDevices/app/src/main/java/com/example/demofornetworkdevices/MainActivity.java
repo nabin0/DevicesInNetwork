@@ -40,20 +40,19 @@ public class MainActivity extends AppCompatActivity {
         btnFetchDevices = findViewById(R.id.btnFetchDevices);
 
         RegTypeBrowserViewModel viewModel = new ViewModelProvider(this).get(RegTypeBrowserViewModel.class);
-        ServiceBrowserViewModel serviceBrowserViewModel = new ViewModelProvider(this).get(ServiceBrowserViewModel.class);
         getDomainList(viewModel);
 
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                getDeviceDetails(serviceBrowserViewModel);
+                getDeviceDetails(viewModel);
             }
         }, 3000);
 
 
         btnFetchDevices.setOnClickListener(view -> {
             deviceDetails.setText("");
-            getDeviceDetails(serviceBrowserViewModel);
+            getDeviceDetails(viewModel);
 
             for (BonjourService service : bonjourServices) {
                 StringBuilder dnsRecords = new StringBuilder();
@@ -64,17 +63,19 @@ public class MainActivity extends AppCompatActivity {
                     String value = dnsDetails.get(key);
                     dnsRecords.append(key + ": " + value + "\n");
                 }
-                serviceBrowserViewModel.resolveIPRecords(service, (service1) -> {
+                viewModel.resolveIPRecords(service, (service1) -> {
 
                     String ip4Address = "";
                     String ip6Address = "";
 
                     for (InetAddress inetAddress : service1.getInetAddresses()) {
                         if (inetAddress instanceof Inet4Address) {
-                            ip4Address = inetAddress.getHostAddress() + ":" + service1.getPort();
+                            ip4Address = inetAddress.getHostAddress();
+//                            ip4Address = inetAddress.getHostAddress() + ":" + service1.getPort();
                             Log.d("TAG", "UpdateIpAddress: " + inetAddress.getHostAddress());
                         } else {
-                            ip6Address = inetAddress.getHostAddress() + ":" + service1.getPort();
+                            ip6Address = inetAddress.getHostAddress();
+//                            ip6Address = inetAddress.getHostAddress() + ":" + service1.getPort();
                         }
                     }
 
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void getDeviceDetails(ServiceBrowserViewModel serviceBrowserViewModel) {
+    void getDeviceDetails(RegTypeBrowserViewModel serviceBrowserViewModel) {
         for (RegTypeBrowserViewModel.BonjourDomain domain : bonjourDomainList) {
             String regType = domain.getServiceName() + "." + domain.getRegType().split(Config.REG_TYPE_SEPARATOR)[0] + ".";
             serviceBrowserViewModel.startDiscovery(regType, "local.", service -> {
