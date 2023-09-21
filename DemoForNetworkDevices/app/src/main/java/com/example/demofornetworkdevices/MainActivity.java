@@ -41,50 +41,17 @@ public class MainActivity extends AppCompatActivity {
 
         RegTypeBrowserViewModel viewModel = new ViewModelProvider(this).get(RegTypeBrowserViewModel.class);
         getDomainList(viewModel);
-
+//        getDeviceDetails(viewModel);
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
+                viewModel.mDisposable.dispose();
+                if (viewModel.mResolveIPDisposable != null) {
+                    viewModel.mResolveIPDisposable.dispose();
+                }
                 getDeviceDetails(viewModel);
             }
         }, 3000);
-
-
-        btnFetchDevices.setOnClickListener(view -> {
-            deviceDetails.setText("");
-            getDeviceDetails(viewModel);
-
-            for (BonjourService service : bonjourServices) {
-                StringBuilder dnsRecords = new StringBuilder();
-                Map<String, String> dnsDetails = service.getTxtRecords();
-                List<String> keys = new ArrayList<>(dnsDetails.keySet());
-                for (int i = 0; i < keys.size(); i++) {
-                    String key = keys.get(i);
-                    String value = dnsDetails.get(key);
-                    dnsRecords.append(key + ": " + value + "\n");
-                }
-                viewModel.resolveIPRecords(service, (service1) -> {
-
-                    String ip4Address = "";
-                    String ip6Address = "";
-
-                    for (InetAddress inetAddress : service1.getInetAddresses()) {
-                        if (inetAddress instanceof Inet4Address) {
-                            ip4Address = inetAddress.getHostAddress();
-//                            ip4Address = inetAddress.getHostAddress() + ":" + service1.getPort();
-                            Log.d("TAG", "UpdateIpAddress: " + inetAddress.getHostAddress());
-                        } else {
-                            ip6Address = inetAddress.getHostAddress();
-//                            ip6Address = inetAddress.getHostAddress() + ":" + service1.getPort();
-                        }
-                    }
-
-                    String deviceDetail = "Friendly Name: " + service.getServiceName() + "\nModelName: " + service.getHostname() + "\nAddress:IPv4 " + ip4Address + "\nAddress:IPv6 " + ip6Address + "\nPort: " + service.getPort() + "\n" + dnsRecords + "\n\n\n";
-                    deviceDetails.append(deviceDetail);
-
-                });
-            }
-        });
     }
 
     void getDomainList(RegTypeBrowserViewModel viewModel) {
@@ -102,18 +69,48 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void getDeviceDetails(RegTypeBrowserViewModel serviceBrowserViewModel) {
+    void getDeviceDetails(RegTypeBrowserViewModel viewModel) {
         for (RegTypeBrowserViewModel.BonjourDomain domain : bonjourDomainList) {
             String regType = domain.getServiceName() + "." + domain.getRegType().split(Config.REG_TYPE_SEPARATOR)[0] + ".";
-            serviceBrowserViewModel.startDiscovery(regType, "local.", service -> {
+            viewModel.startDiscovery(regType, "local.", service -> {
                 if (!service.isLost()) {
-                    bonjourServices.add(service);
-                } else {
-                    bonjourServices.remove(service);
+                    StringBuilder dnsRecords = new StringBuilder();
+                    Map<String, String> dnsDetails = service.getTxtRecords();
+                    List<String> keys = new ArrayList<>(dnsDetails.keySet());
+                    for (int i = 0; i < keys.size(); i++) {
+                        String key = keys.get(i);
+                        String value = dnsDetails.get(key);
+                        dnsRecords.append(key + ": " + value + "\n");
+                    }
+                    viewModel.resolveIPRecords(service, (service1) -> {
+
+                        String ip4Address = "";
+                        String ip6Address = "";
+
+                        for (InetAddress inetAddress : service1.getInetAddresses()) {
+                            if (inetAddress instanceof Inet4Address) {
+                                ip4Address = inetAddress.getHostAddress();
+//                            ip4Address = inetAddress.getHostAddress() + ":" + service1.getPort();
+                                Log.d("TAG", "UpdateIpAddress: " + inetAddress.getHostAddress());
+                            } else {
+                                ip6Address = inetAddress.getHostAddress();
+//                            ip6Address = inetAddress.getHostAddress() + ":" + service1.getPort();
+                            }
+                        }
+
+                        String deviceDetail = "Friendly Name: " + service.getServiceName() + "\nModelName: " + service.getHostname() + "\nAddress:IPv4 " + ip4Address + "\nAddress:IPv6 " + ip6Address + "\nPort: " + service.getPort() + "\n" + dnsRecords + "\n\n\n";
+                        deviceDetails.append(deviceDetail);
+
+                    });
                 }
                 Log.d("TAG", "Devices List : " + bonjourServices.size());
             }, throwable -> {
             });
         }
+        viewModel.mDisposable.dispose();
+        if (viewModel.mResolveIPDisposable != null) {
+            viewModel.mResolveIPDisposable.dispose();
+        }
+
     }
 }

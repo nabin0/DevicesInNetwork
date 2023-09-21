@@ -25,7 +25,7 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
 
     private final HashMap<String, Disposable> mBrowsers = new HashMap<>();
     private final HashMap<String, BonjourDomain> mServices = new HashMap<>();
-    private Disposable mResolveIPDisposable;
+    protected Disposable mResolveIPDisposable;
 
     protected Rx2Dnssd mRxDnssd;
     protected Disposable mDisposable;
@@ -51,10 +51,6 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
             }
             mBrowsers.clear();
         }
-    }
-
-    public HashMap<String, BonjourDomain> getServices() {
-        return mServices;
     }
 
     public void startDiscovery(Consumer<Collection<BonjourDomain>> servicesAction, Consumer<Throwable> errorAction) {
