@@ -88,7 +88,7 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
                         if (!mBrowsers.containsKey(key)) {
                             mBrowsers.put(key, mRxDnssd.browse(key, serviceDomain)
                                     .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .observeOn(Schedulers.io())
                                     .subscribe(serviceAction, errorAction));
                         }
                         mServices.put(createKey(service.getDomain(), service.getRegType(), service.getServiceName()), new BonjourDomain(service));
@@ -117,7 +117,7 @@ public class RegTypeBrowserViewModel extends AndroidViewModel {
         mDisposable = mRxDnssd.browse(reqType, domain)
                 .compose(mRxDnssd.resolve())
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())
                 .subscribe(servicesAction, errorAction);
     }
 

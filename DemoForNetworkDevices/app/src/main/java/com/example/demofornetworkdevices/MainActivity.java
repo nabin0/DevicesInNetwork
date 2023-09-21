@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 getDeviceDetails(viewModel);
             }
-        }, 3000);
+        }, 2000);
     }
 
     void getDomainList(RegTypeBrowserViewModel viewModel) {
